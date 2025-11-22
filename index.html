@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Strava Design Studio v24 (Aligned Logo)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&family=Lato:wght@400;700;900&family=Merriweather:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Nunito:wght@400;700;900&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Roboto+Mono:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --accent: #fc4c02;
+            --bg-dark: #0f0f10;
+            --panel-bg: #18181b;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --border: #27272a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        /* --- MODAL (POPUP) STİLLERİ --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: #222;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 100%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid var(--accent);
+            overflow-y: auto;
+        }
+
+        .modal-img {
+            max-width: 100%;
+            max-height: 60vh;
+            border: 1px dashed #555;
+            background-image: linear-gradient(45deg, #333 25%, transparent 25%), linear-gradient(-45deg, #333 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #333 75%), linear-gradient(-45deg, transparent 75%, #333 75%);
+            background-size: 20px 20px;
+            background-color: #1a1a1a;
+            margin: 15px 0;
+        }
+
+        .modal-instructions {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .modal-instructions span {
+            color: var(--accent);
+            font-weight: bold;
+            display: block;
+            font-size: 1.2rem;
+            margin-top: 5px;
+        }
+
+        .close-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* --- HEADER ALANI --- */
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1400px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 { 
+            font-weight: 900; 
+            letter-spacing: -1px; 
+            margin: 0; 
+            font-size: 1.8rem; 
+            white-space: nowrap;
+        }
+        h1 span { color: var(--accent); }
+
+        .lang-selector { flex-shrink: 0; }
+
+        .lang-selector select {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            appearance: none;
+            -webkit-appearance: none;
+            text-align: center;
+        }
+
+        /* --- ANA DÜZEN --- */
+        .layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .sidebar {
+            flex: 1;
+            min-width: 340px;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-box {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .full-width { grid-column: span 2; }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: #27272a;
+            border: 1px solid #3f3f46;
+            color: white;
+            border-radius: 8px;
+            font-family: inherit; 
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: 0.2s;
+        }
+        
+        #fontSelect { font-size: 1rem; }
+        #fontSelect option[value="Inter"] { font-family: 'Inter', sans-serif; font-weight: 900; }
+        #fontSelect option[value="Bebas Neue"] { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; }
+        #fontSelect option[value="Oswald"] { font-family: 'Oswald', sans-serif; }
+        #fontSelect option[value="Montserrat"] { font-family: 'Montserrat', sans-serif; }
+        #fontSelect option[value="Playfair Display"] { font-family: 'Playfair Display', serif; }
+        #fontSelect option[value="Roboto Mono"] { font-family: 'Roboto Mono', monospace; }
+        #fontSelect option[value="Merriweather"] { font-family: 'Merriweather', serif; }
+        #fontSelect option[value="Poppins"] { font-family: 'Poppins', sans-serif; }
+        #fontSelect option[value="Open Sans"] { font-family: 'Open Sans', sans-serif; }
+        #fontSelect option[value="Nunito"] { font-family: 'Nunito', sans-serif; }
+        #fontSelect option[value="Lato"] { font-family: 'Lato', sans-serif; }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            outline: none;
+            background: #3f3f46;
+        }
+
+        input[type="range"] {
+            padding: 0; 
+            height: 30px; 
+        }
+
+        .customizer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #222;
+            border-radius: 8px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--accent); flex-shrink: 0; }
+
+        .logo-section { margin-bottom: 20px; }
+        
+        .file-upload {
+            position: relative;
+            display: block;
+            width: 100%;
+            text-align: center;
+            padding: 20px 0;
+            border: 2px dashed #444;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            background: rgba(255,255,255,0.02);
+            margin-top: 10px;
+        }
+        .file-upload:hover { border-color: var(--accent); background: rgba(252, 76, 2, 0.05); }
+        .file-input { position: absolute; width: 100%; height: 100%; top:0; left:0; opacity: 0; cursor: pointer;}
+        .hidden { display: none; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(252, 76, 2, 0.3);
+        }
+        .btn-primary:hover { background: #e34402; transform: translateY(-2px); }
+
+        .preview-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 340px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            background-image: 
+                linear-gradient(45deg, #333 25%, transparent 25%), 
+                linear-gradient(-45deg, #333 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #333 75%), 
+                linear-gradient(-45deg, transparent 75%, #333 75%);
+            background-size: 20px 20px;
+            background-color: #1a1a1a;
+            width: 100%;
+        }
+
+        canvas { display: block; width: 100%; height: auto; }
+
+        .helper-text {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .res-badge {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: #666;
+            background: #222;
+            padding: 4px 10px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            font-family: monospace;
+        }
+
+        @media (max-width: 768px) {
+            .header-area {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            .lang-selector, .lang-selector select { width: 100%; text-align-last: center; }
+            .sidebar, .preview-area { min-width: 100%; }
+            .form-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MODAL -->
+    <div id="saveModal" class="modal-overlay" onclick="if(event.target === this) closeModal()">
+        <div class="modal-content">
+            <div class="modal-instructions">
+                Galeriye kaydetmek için:
+                <span>👇 Görsele Basılı Tut 👇</span>
+                ve "Fotoğraflara Kaydet" deyin.
+            </div>
+            <img id="finalImage" class="modal-img" src="" alt="Final Görsel">
+            <button class="close-btn" onclick="closeModal()">KAPAT</button>
+        </div>
+    </div>
+
+    <div class="header-area">
+        <h1>Strava<span>Design</span> Studio v24</h1>
+        <div class="lang-selector">
+            <select id="langSelect" onchange="changeLanguage()">
+                <option value="tr" selected>🇹🇷 Türkçe</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layout">
+        <!-- SOL TARAFLAR: AYARLAR -->
+        <div class="sidebar">
+            
+            <!-- 1. VERİLER -->
+            <div class="panel-box">
+                <div class="panel-title" id="t-panel1">1. Aktivite Verileri</div>
+                <div class="form-grid">
+                    <div class="full-width input-group">
+                        <label id="t-title">Başlık</label>
+                        <input type="text" id="title" value="Sunday Morning Run" oninput="triggerDraw()">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label id="t-distance">Mesafe (km)</label>
+                        <input type="number" id="distance" value="10.5" step="0.01" oninput="calculatePace()">
+                    </div>
+
+                    <div class="input-group">
+                        <label id="t-time">Süre (sa:dk:sn)</label>
+                        <input type="text" id="time" value="00:55:00" placeholder="00:55:00" oninput="calculatePace()">
+                    </div>
+
+                    <div class="input-group">
+                        <label id="t-pace">Tempo (dk/km)</label>
+                        <input type="text" id="pace" value="5:14" readonly style="background:#333; color:#aaa; cursor:not-allowed;">
+                    </div>
+
+                    <div class="input-group">
+                        <label>GAP (Grade Adjusted)</label>
+                        <input type="text" id="gap" value="5:14" oninput="triggerDraw()">
+                    </div>
+
+                    <div class="input-group">
+                        <label id="t-elevation">İrtifa (m)</label>
+                        <input type="number" id="elevation" value="145" oninput="triggerDraw()">
+                    </div>
+
+                    <div class="input-group">
+                        <label id="t-calories">Kalori (kcal)</label>
+                        <input type="number" id="calories" value="850" oninput="triggerDraw()">
+                    </div>
+
+                    <div class="input-group">
+                        <label id="t-hr">Ort. Nabız (bpm)</label>
+                        <input type="number" id="hr" value="152" oninput="triggerDraw()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. TASARIM & LOGO -->
+            <div class="panel-box">
+                <div class="panel-title" id="t-panel2">2. Görünüm & Logo</div>
+                
+                <!-- FONT SEÇİMİ -->
+                <div class="input-group" style="margin-bottom:15px;">
+                    <label id="t-font">Yazı Tipi (Font)</label>
+                    <select id="fontSelect" onchange="handleFontChange()">
+                        <option value="Inter" selected>Inter (Orijinal Kalın)</option>
+                        <option value="Bebas Neue">Bebas Neue (Sportif/Poster)</option>
+                        <option value="Oswald">Oswald (Sert/Dar)</option>
+                        <option value="Montserrat">Montserrat (Geometrik)</option>
+                        <option value="Poppins">Poppins (Yuvarlak/Modern)</option>
+                        <option value="Roboto">Roboto (Klasik Android)</option>
+                        <option value="Open Sans">Open Sans (Okunaklı)</option>
+                        <option value="Lato">Lato (Sıcak/Dengeli)</option>
+                        <option value="Nunito">Nunito (Yuvarlak/Yumuşak)</option>
+                        <option value="Playfair Display">Playfair Display (Serif/Zarif)</option>
+                        <option value="Merriweather">Merriweather (Serif/Ciddi)</option>
+                        <option value="Roboto Mono">Roboto Mono (Teknik/Kod)</option>
+                    </select>
+                </div>
+
+                <!-- LOGO SEÇİM ALANI -->
+                <div class="logo-section">
+                    <div class="input-group">
+                        <label id="t-logo-select">Logo Seçimi</label>
+                        <select id="logoSource" onchange="handleLogoSelection()">
+                            <option value="custom" id="opt-custom">📁 Özel Yükle (Custom)</option>
+                            <option value="bold" id="opt-bold">🦥 Bold Union</option>
+                            <option value="runurban" id="opt-runurban">🏙️ Run Urban.</option>
+                        </select>
+                    </div>
+
+                    <!-- YENİ LOGO BOYUT SLIDER'I -->
+                    <div class="input-group" style="margin-top: 10px;">
+                        <label id="t-logo-size">Logo Boyutu</label>
+                        <input type="range" id="logoSize" min="0.5" max="2.0" step="0.1" value="1.0" oninput="triggerDraw()">
+                    </div>
+
+                    <!-- Dosya Yükleme -->
+                    <div id="customUploadArea" class="file-upload">
+                        <span id="uploadText" style="font-size: 0.9rem; color:#ccc;">➕ Logo Seçmek İçin Tıkla</span>
+                        <input type="file" class="file-input" accept="image/*" onchange="handleCustomLogo(this)">
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin-bottom:15px;">
+                    <label id="t-hero">👑 ANA GÖSTERGE</label>
+                    <select id="heroMetric" onchange="triggerDraw()">
+                        <option value="distance" id="opt-dist">Mesafe (km)</option>
+                        <option value="time" id="opt-time">Süre</option>
+                        <option value="calories" id="opt-cal">Kalori</option>
+                        <option value="hr" id="opt-hr">Nabız</option>
+                        <option value="elevation" id="opt-ele">İrtifa</option>
+                    </select>
+                </div>
+
+                <label id="t-sub" style="display:block; margin-bottom:10px; font-size:0.75rem; color:#aaa;">👇 ALT GÖSTERGELER</label>
+                
+                <div class="customizer-row">
+                    <label class="checkbox-label"><input type="checkbox" class="stat-check" value="time" checked onchange="triggerDraw()"> <span id="chk-time">Süre</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="stat-check" value="pace" checked onchange="triggerDraw()"> <span id="chk-pace">Ort. Tempo</span></label>
+                </div>
+                <div class="customizer-row">
+                    <label class="checkbox-label"><input type="checkbox" class="stat-check" value="hr" checked onchange="triggerDraw()"> <span id="chk-hr">Nabız</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="stat-check" value="calories" checked onchange="triggerDraw()"> <span id="chk-cal">Kalori</span></label>
+                </div>
+                <div class="customizer-row">
+                    <label class="checkbox-label"><input type="checkbox" class="stat-check" value="elevation" checked onchange="triggerDraw()"> <span id="chk-ele">İrtifa</span></label>
+                    <label class="checkbox-label"><input type="checkbox" class="stat-check" value="gap" onchange="triggerDraw()"> GAP</label>
+                </div>
+
+                <div class="customizer-row" style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+                    <label class="checkbox-label" style="width:100%">
+                        <input type="checkbox" id="showShadow" checked onchange="triggerDraw()"> 
+                        <span id="chk-shadow">Arka Plan Gölgesi (Okunurluk)</span>
+                    </label>
+                </div>
+
+                <div class="input-group" style="margin-top:15px;">
+                    <label id="t-pos">Pozisyon (Yükseklik Ayarı)</label>
+                    <input type="range" id="yPos" min="100" max="1500" value="1200" oninput="triggerDraw()">
+                </div>
+            </div>
+
+            <button class="btn-primary" id="btn-download" onclick="openSaveModal()">📱 GÖRSELİ HAZIRLA (KAYDET)</button>
+        </div>
+
+        <!-- SAĞ: CANVAS -->
+        <div class="preview-area">
+            <div class="canvas-wrapper">
+                <canvas id="mainCanvas" width="1080" height="1920"></canvas>
+            </div>
+            <p class="helper-text" id="t-helper">Çıktı şeffaf (transparent) olacaktır. Önizlemedeki kareli zemin şeffaflığı temsil eder.</p>
+            <div class="res-badge">Target Resolution: 1080 x 1920 px</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        let userLogo = null;
+        let currentLang = 'tr';
+
+        // DİL VERİTABANI
+        const translations = {
+            tr: {
+                panel1: "1. Aktivite Verileri",
+                title: "Başlık",
+                distance: "Mesafe (km)",
+                time: "Süre",
+                pace: "Tempo (dk/km)",
+                elevation: "İrtifa (m)",
+                calories: "Kalori (kcal)",
+                hr: "Ort. Nabız (bpm)",
+                panel2: "2. Görünüm & Logo",
+                logoSelect: "Logo Seçimi",
+                logoSize: "Logo Boyutu",
+                optCustom: "📁 Özel Yükle (Custom)",
+                optBold: "🦥 Bold Union",
+                optRunUrban: "🏙️ Run Urban.",
+                uploadText: "➕ Logo Seçmek İçin Tıkla",
+                logoReady: "✅ Logo Hazır",
+                hero: "👑 ANA GÖSTERGE",
+                sub: "👇 ALT GÖSTERGELER",
+                pos: "Pozisyon (Yükseklik Ayarı)",
+                btnDownload: "📱 GÖRSELİ HAZIRLA (KAYDET)",
+                helper: "Çıktı şeffaf (transparent) olacaktır. Önizlemedeki kareli zemin şeffaflığı temsil eder.",
+                optDist: "Mesafe (km)",
+                optTime: "Süre",
+                optCal: "Kalori",
+                optHr: "Nabız",
+                optEle: "İrtifa",
+                chkPace: "Ort. Tempo",
+                c_distance: "Mesafe",
+                c_time: "Süre",
+                c_pace: "Ort. Tempo",
+                c_elevation: "Yükseklik",
+                c_calories: "Kalori",
+                c_hr: "Ort. Nabız",
+                chkShadow: "Arka Plan Gölgesi (Okunurluk)",
+                fontLabel: "Yazı Tipi (Font)",
+                modalTitle: "Galeriye kaydetmek için:",
+                modalAction: "👇 Görsele Basılı Tut 👇",
+                modalEnd: "ve 'Fotoğraflara Kaydet' deyin.",
+                close: "KAPAT"
+            },
+            en: {
+                panel1: "1. Activity Data",
+                title: "Title",
+                distance: "Distance (km)",
+                time: "Time",
+                pace: "Pace (min/km)",
+                elevation: "Elevation (m)",
+                calories: "Calories (kcal)",
+                hr: "Avg HR (bpm)",
+                panel2: "2. Appearance & Logo",
+                logoSelect: "Logo Selection",
+                logoSize: "Logo Size",
+                optCustom: "📁 Upload Custom",
+                optBold: "🦥 Bold Union",
+                optRunUrban: "🏙️ Run Urban.",
+                uploadText: "➕ Click to Select Logo",
+                logoReady: "✅ Logo Ready",
+                hero: "👑 MAIN METRIC",
+                sub: "👇 SUB METRICS",
+                pos: "Position (Vertical Offset)",
+                btnDownload: "📱 PREPARE IMAGE (SAVE)",
+                helper: "Output will be transparent. The checkerboard pattern represents transparency.",
+                optDist: "Distance (km)",
+                optTime: "Time",
+                optCal: "Calories",
+                optHr: "Heart Rate",
+                optEle: "Elevation",
+                chkPace: "Avg Pace",
+                c_distance: "Distance",
+                c_time: "Time",
+                c_pace: "Avg Pace",
+                c_elevation: "Elevation",
+                c_calories: "Calories",
+                c_hr: "Avg HR",
+                chkShadow: "Background Shadow (Readability)",
+                fontLabel: "Font Family",
+                modalTitle: "To save to Gallery:",
+                modalAction: "👇 Long Press Image 👇",
+                modalEnd: "and select 'Save to Photos'.",
+                close: "CLOSE"
+            }
+        };
+
+        // --- BAŞLANGIÇ VE FONT YÖNETİMİ ---
+        window.onload = function() {
+            changeLanguage();
+            calculatePace();
+            
+            document.fonts.load('900 10px "Inter"').then(() => {
+                draw();
+            }).catch(() => {
+                draw();
+            });
+
+            setTimeout(draw, 500);
+        };
+
+        function handleFontChange() {
+            const selectedFont = document.getElementById('fontSelect').value;
+            document.fonts.load(`10px "${selectedFont}"`).then(() => {
+                draw();
+            });
+        }
+
+        function triggerDraw() {
+            requestAnimationFrame(draw);
+        }
+
+        function changeLanguage() {
+            currentLang = document.getElementById('langSelect').value;
+            const t = translations[currentLang];
+
+            document.getElementById('t-panel1').innerText = t.panel1;
+            document.getElementById('t-title').innerText = t.title;
+            document.getElementById('t-distance').innerText = t.distance;
+            document.getElementById('t-time').innerText = t.time;
+            document.getElementById('t-pace').innerText = t.pace;
+            document.getElementById('t-elevation').innerText = t.elevation;
+            document.getElementById('t-calories').innerText = t.calories;
+            document.getElementById('t-hr').innerText = t.hr;
+            
+            document.getElementById('t-panel2').innerText = t.panel2;
+            document.getElementById('t-logo-select').innerText = t.logoSelect;
+            document.getElementById('t-logo-size').innerText = t.logoSize;
+            document.getElementById('opt-custom').innerText = t.optCustom;
+            document.getElementById('opt-bold').innerText = t.optBold;
+            document.getElementById('opt-runurban').innerText = t.optRunUrban;
+            
+            if(document.getElementById('logoSource').value === 'custom' && !userLogo) {
+                document.getElementById('uploadText').innerText = t.uploadText;
+            }
+            
+            document.getElementById('t-hero').innerText = t.hero;
+            document.getElementById('t-sub').innerText = t.sub;
+            document.getElementById('t-pos').innerText = t.pos;
+            document.getElementById('btn-download').innerText = t.btnDownload;
+            document.getElementById('t-helper').innerText = t.helper;
+            
+            document.getElementById('t-font').innerText = t.fontLabel;
+
+            document.getElementById('opt-dist').innerText = t.optDist;
+            document.getElementById('opt-time').innerText = t.optTime;
+            document.getElementById('opt-cal').innerText = t.optCal;
+            document.getElementById('opt-hr').innerText = t.optHr;
+            document.getElementById('opt-ele').innerText = t.optEle;
+
+            document.getElementById('chk-time').innerText = t.optTime;
+            document.getElementById('chk-pace').innerText = t.chkPace;
+            document.getElementById('chk-hr').innerText = t.optHr;
+            document.getElementById('chk-cal').innerText = t.optCal;
+            document.getElementById('chk-ele').innerText = t.optEle;
+            
+            document.getElementById('chk-shadow').innerText = t.chkShadow;
+
+            // Modal text
+            const modalText = document.querySelector('.modal-instructions');
+            if(modalText) {
+                modalText.innerHTML = `${t.modalTitle} <span>${t.modalAction}</span> ${t.modalEnd}`;
+            }
+            document.querySelector('.close-btn').innerText = t.close;
+
+            draw();
+        }
+
+        // --- LOGO & MODAL İŞLEMLERİ ---
+        
+        function openSaveModal() {
+            const dataUrl = canvas.toDataURL("image/png");
+            const finalImg = document.getElementById('finalImage');
+            finalImg.src = dataUrl;
+            document.getElementById('saveModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('saveModal').style.display = 'none';
+        }
+
+        function handleLogoSelection() {
+            const source = document.getElementById('logoSource').value;
+            const uploadArea = document.getElementById('customUploadArea');
+
+            if (source === 'custom') {
+                uploadArea.style.display = 'block';
+                userLogo = null; 
+                document.getElementById('uploadText').innerText = translations[currentLang].uploadText;
+                draw();
+            } else {
+                // bold veya runurban
+                uploadArea.style.display = 'none';
+                if (source === 'bold') {
+                    loadPresetLogo('bold.png');
+                } else if (source === 'runurban') {
+                    loadPresetLogo('runurban.png');
+                }
+            }
+        }
+
+        function handleCustomLogo(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        userLogo = img;
+                        document.getElementById('uploadText').innerText = translations[currentLang].logoReady;
+                        draw();
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function loadPresetLogo(filename) {
+            const img = new Image();
+            img.onload = function() {
+                userLogo = img;
+                draw();
+            };
+            img.onerror = function() {
+                alert(filename + " dosyası bulunamadı. Lütfen dosyanın HTML ile aynı klasörde olduğundan emin olun.");
+            };
+            img.src = filename;
+        }
+
+        function calculatePace() {
+            const dist = parseFloat(document.getElementById('distance').value);
+            const timeStr = document.getElementById('time').value;
+
+            if (!dist || dist <= 0 || !timeStr) return;
+
+            const parts = timeStr.split(':').map(Number);
+            let totalSeconds = 0;
+            
+            if (parts.length === 3) { 
+                totalSeconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+            } else if (parts.length === 2) { 
+                totalSeconds = (parts[0] * 60) + parts[1];
+            } else {
+                return;
+            }
+
+            const paceSeconds = totalSeconds / dist;
+            const pMin = Math.floor(paceSeconds / 60);
+            const pSec = Math.floor(paceSeconds % 60);
+            
+            const formattedPace = `${pMin}:${pSec < 10 ? '0' : ''}${pSec}`;
+            
+            document.getElementById('pace').value = formattedPace;
+            document.getElementById('gap').value = formattedPace;
+
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const w = canvas.width;
+            const yPos = parseInt(document.getElementById('yPos').value);
+            const cardY = yPos; 
+            const t = translations[currentLang]; 
+            
+            const selectedFont = document.getElementById('fontSelect').value;
+            
+            const showShadow = document.getElementById('showShadow').checked;
+            if (showShadow) {
+                const gradient = ctx.createLinearGradient(0, cardY - 200, 0, cardY + 600);
+                gradient.addColorStop(0, "rgba(0,0,0,0)");
+                gradient.addColorStop(0.4, "rgba(0,0,0,0.6)");
+                gradient.addColorStop(1, "rgba(0,0,0,0.9)");
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, cardY - 200, w, 1920 - (cardY - 200));
+            }
+
+            const data = {
+                distance: { val: document.getElementById('distance').value, unit: "km", label: t.c_distance },
+                time: { val: document.getElementById('time').value, unit: "", label: t.c_time },
+                pace: { val: document.getElementById('pace').value, unit: "/km", label: t.c_pace },
+                gap: { val: document.getElementById('gap').value, unit: "/km", label: "GAP" }, 
+                elevation: { val: document.getElementById('elevation').value, unit: "m", label: t.c_elevation },
+                calories: { val: document.getElementById('calories').value, unit: "kcal", label: t.c_calories },
+                hr: { val: document.getElementById('hr').value, unit: "bpm", label: t.c_hr }
+            };
+
+            const title = document.getElementById('title').value;
+            const heroKey = document.getElementById('heroMetric').value;
+
+            // --- ÇİZİM ---
+            
+            ctx.shadowColor = "rgba(0,0,0,0.5)";
+            ctx.shadowBlur = 20;
+            ctx.textAlign = "left";
+            ctx.fillStyle = "white";
+            
+            let weightTitle = "bold";
+            let weightHero = "bold";
+            
+            if (selectedFont === 'Inter') {
+                weightTitle = "900"; 
+                weightHero = "900"; 
+            }
+
+            ctx.font = `${weightTitle} 50px "${selectedFont}"`;
+            ctx.fillText(title, 60, cardY);
+
+            if (userLogo) {
+                // LOGO BOYUT AYARI
+                const logoScale = parseFloat(document.getElementById('logoSize').value);
+                const baseMaxH = 120; 
+                const baseMaxW = 200;
+                
+                const logoMaxH = baseMaxH * logoScale;
+                const logoMaxW = baseMaxW * logoScale;
+
+                let lW = userLogo.width;
+                let lH = userLogo.height;
+                const ratio = lW / lH;
+
+                if (lH > logoMaxH) { lH = logoMaxH; lW = lH * ratio; }
+                if (lW > logoMaxW) { lW = logoMaxW; lH = lW / ratio; }
+
+                const logoX = w - 60 - lW;
+                // LOGO HİZALAMA: Biraz aşağı alındı
+                const logoY = cardY - 35; 
+                ctx.drawImage(userLogo, logoX, logoY, lW, lH);
+            }
+
+            const heroData = data[heroKey];
+            
+            ctx.font = `${weightHero} 200px "${selectedFont}"`; 
+            ctx.fillStyle = "white";
+            ctx.fillText(heroData.val, 50, cardY + 180);
+
+            const heroWidth = ctx.measureText(heroData.val).width;
+            
+            ctx.font = `bold 50px "${selectedFont}"`;
+            ctx.fillStyle = "#fc4c02";
+            ctx.fillText(heroData.unit, 50 + heroWidth + 15, cardY + 180);
+
+            ctx.font = `bold 30px "${selectedFont}"`;
+            ctx.fillStyle = "#aaa";
+            ctx.fillText(heroData.label.toUpperCase(), 60, cardY + 225);
+
+            const checkedBoxes = document.querySelectorAll('.stat-check:checked');
+            let activeStats = Array.from(checkedBoxes)
+                .map(cb => cb.value)
+                .filter(key => key !== heroKey);
+
+            const count = activeStats.length;
+            let rows = [];
+
+            if (count <= 3) {
+                rows.push(activeStats);
+            } else {
+                const splitIndex = Math.ceil(count / 2);
+                rows.push(activeStats.slice(0, splitIndex)); 
+                rows.push(activeStats.slice(splitIndex));    
+            }
+
+            let currentY = cardY + 320;
+            let gapX = 320;
+            let gapY = 140; 
+
+            rows.forEach((rowItems, rowIndex) => {
+                let rowY = currentY + (rowIndex * gapY);
+                let labelSize = 28;
+                let valueSize = 55;
+                
+                if (rowItems.length <= 2) {
+                    labelSize = 35; 
+                    valueSize = 65; 
+                    gapX = 400;     
+                } else {
+                    gapX = 300;     
+                }
+
+                let startX = 60;
+
+                rowItems.forEach((key, colIndex) => {
+                    const item = data[key];
+                    
+                    ctx.font = `bold ${labelSize}px "${selectedFont}"`;
+                    ctx.fillStyle = "#888";
+                    ctx.fillText(item.label, startX + (colIndex * gapX), rowY);
+
+                    ctx.font = `bold ${valueSize}px "${selectedFont}"`;
+                    ctx.fillStyle = "white";
+                    const valText = item.val + (item.unit ? " " + item.unit : "");
+                    ctx.fillText(valText, startX + (colIndex * gapX), rowY + (valueSize + 5));
+                });
+            });
+
+            ctx.beginPath();
+            ctx.moveTo(60, cardY + 260);
+            ctx.lineTo(w - 60, cardY + 260);
+            ctx.strokeStyle = "rgba(255,255,255,0.15)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>
