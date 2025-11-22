@@ -457,10 +457,11 @@
                 </div>
 
                 <div class="input-group" style="margin-bottom:15px;">
-                    <label id="t-hero">ANA GÖSTERGE</label>
+                    <label id="t-hero">👑 ANA GÖSTERGE</label>
                     <select id="heroMetric" onchange="triggerDraw()">
                         <option value="distance" id="opt-dist">Mesafe (km)</option>
-                         <option value="pace" id="chk-pace">Pace</option>
+                        <option value="time" id="opt-time">Süre</option>
+                        <option value="pace" id="opt-hero-pace">Ort. Tempo</option>
                         <option value="calories" id="opt-cal">Kalori</option>
                         <option value="hr" id="opt-hr">Nabız</option>
                         <option value="elevation" id="opt-ele">İrtifa</option>
@@ -490,7 +491,7 @@
                 </div>
 
                 <div class="input-group" style="margin-top:15px;">
-                    <label id="t-pos">Pozisyon (Yükselme Ayarı)</label>
+                    <label id="t-pos">Pozisyon (Yükseklik Ayarı)</label>
                     <input type="range" id="yPos" min="100" max="1500" value="1200" oninput="triggerDraw()">
                 </div>
             </div>
@@ -535,11 +536,12 @@
                 logoReady: "✅ Logo Hazır",
                 hero: "👑 ANA GÖSTERGE",
                 sub: "👇 ALT GÖSTERGELER",
-                pos: "Pozisyon (Yükselme Ayarı)",
+                pos: "Pozisyon (Yükseklik Ayarı)",
                 btnDownload: "📱 GÖRSELİ HAZIRLA (KAYDET)",
                 helper: "Çıktı şeffaf (transparent) olacaktır. Önizlemedeki kareli zemin şeffaflığı temsil eder.",
                 optDist: "Mesafe (km)",
                 optTime: "Süre",
+                optHeroPace: "Ort. Tempo",
                 optCal: "Kalori",
                 optHr: "Nabız",
                 optEle: "İrtifa",
@@ -547,7 +549,7 @@
                 c_distance: "Mesafe",
                 c_time: "Süre",
                 c_pace: "Ort. Tempo",
-                c_elevation: "Yükselme",
+                c_elevation: "Yükseklik",
                 c_calories: "Kalori",
                 c_hr: "Ort. Nabız",
                 chkShadow: "Arka Plan Gölgesi (Okunurluk)",
@@ -581,6 +583,7 @@
                 helper: "Output will be transparent. The checkerboard pattern represents transparency.",
                 optDist: "Distance (km)",
                 optTime: "Time",
+                optHeroPace: "Avg Pace",
                 optCal: "Calories",
                 optHr: "Heart Rate",
                 optEle: "Elevation",
@@ -659,6 +662,7 @@
 
             document.getElementById('opt-dist').innerText = t.optDist;
             document.getElementById('opt-time').innerText = t.optTime;
+            document.getElementById('opt-hero-pace').innerText = t.optHeroPace;
             document.getElementById('opt-cal').innerText = t.optCal;
             document.getElementById('opt-hr').innerText = t.optHr;
             document.getElementById('opt-ele').innerText = t.optEle;
@@ -845,7 +849,23 @@
 
             const heroData = data[heroKey];
             
-            ctx.font = `${weightHero} 200px "${selectedFont}"`; 
+            // Otomatik Boyutlandırma (Hero Metni İçin)
+            let heroFontSize = 200;
+            // Süre (Time) seçiliyse varsayılan olarak biraz küçült
+            if (heroKey === 'time') heroFontSize = 150;
+            
+            // Metin genişliğini hesapla ve sığdır
+            ctx.font = `${weightHero} ${heroFontSize}px "${selectedFont}"`; 
+            let textMetrics = ctx.measureText(heroData.val);
+            let textWidth = textMetrics.width;
+            const maxHeroWidth = w - 100; // Kenarlardan biraz boşluk bırak (100px padding)
+
+            if (textWidth > maxHeroWidth) {
+                heroFontSize = heroFontSize * (maxHeroWidth / textWidth);
+            }
+
+            // Son font ayarı
+            ctx.font = `${weightHero} ${heroFontSize}px "${selectedFont}"`; 
             ctx.fillStyle = "white";
             ctx.fillText(heroData.val, 50, cardY + 180);
 
