@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Strava Design Studio</title>
+    <title>Strava Design Studio v28 (Graph Control)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&family=Lato:wght@400;700;900&family=Merriweather:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Nunito:wght@400;700;900&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Roboto+Mono:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -320,6 +320,13 @@
             border: 1px solid #333;
             font-family: monospace;
         }
+        
+        #gpxStatus {
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-top: 5px;
+            min-height: 1.2em;
+        }
 
         @media (max-width: 768px) {
             .header-area {
@@ -350,7 +357,7 @@
     </div>
 
     <div class="header-area">
-        <h1>Strava<span>Design</span> Studio</h1>
+        <h1>Strava<span>Design</span> Studio v28</h1>
         <div class="lang-selector">
             <select id="langSelect" onchange="changeLanguage()">
                 <option value="tr" selected>🇹🇷 Türkçe</option>
@@ -363,9 +370,17 @@
         <!-- SOL TARAFLAR: AYARLAR -->
         <div class="sidebar">
             
-            <!-- 1. VERİLER -->
+            <!-- 1. VERİLER & GPX -->
             <div class="panel-box">
                 <div class="panel-title" id="t-panel1">1. Aktivite Verileri</div>
+                
+                <!-- GPX YÜKLEME -->
+                <div class="file-upload" style="margin-bottom: 20px; border-color: #666;">
+                    <span id="gpxText">📂 GPX Dosyası Yükle (Otomatik Doldur)</span>
+                    <input type="file" class="file-input" accept=".gpx" onchange="handleGpxUpload(this)">
+                </div>
+                <div id="gpxStatus"></div>
+
                 <div class="form-grid">
                     <div class="full-width input-group">
                         <label id="t-title">Başlık</label>
@@ -430,6 +445,32 @@
                         <option value="Merriweather">Merriweather (Serif/Ciddi)</option>
                         <option value="Roboto Mono">Roboto Mono (Teknik/Kod)</option>
                     </select>
+                </div>
+                
+                <!-- GRAFİK SEÇİMİ & AYARLAR -->
+                <div class="input-group" style="margin-bottom:15px;">
+                    <label id="t-graph">Grafik (GPX Gereklidir)</label>
+                    <select id="graphSelect" onchange="triggerDraw()">
+                        <option value="none">🚫 Yok (None)</option>
+                        <option value="hr" selected>❤️ Nabız (Heart Rate)</option>
+                        <option value="elevation">⛰️ İrtifa (Elevation)</option>
+                        <option value="pace">⚡ Tempo (Pace/Speed)</option>
+                    </select>
+                </div>
+
+                <div class="form-grid" style="margin-bottom: 15px;">
+                     <div class="input-group">
+                        <label id="t-graph-pos">Grafik Konumu</label>
+                        <input type="range" id="graphYPos" min="200" max="800" value="520" oninput="triggerDraw()">
+                    </div>
+                    <div class="input-group">
+                        <label id="t-graph-color">Grafik Rengi</label>
+                        <select id="graphColor" onchange="triggerDraw()">
+                            <option value="#fc4c02" selected id="opt-color-orange">🍊 Turuncu</option>
+                            <option value="#ffffff" id="opt-color-white">⚪ Beyaz</option>
+                            <option value="#3b82f6" id="opt-color-blue">🔵 Mavi</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- LOGO SEÇİM ALANI -->
@@ -514,6 +555,17 @@
         const ctx = canvas.getContext('2d');
         let userLogo = null;
         let currentLang = 'tr';
+        
+        // GPX Veri Saklama
+        let gpxData = {
+            hr: [],
+            elevation: [],
+            pace: [],
+            distance: 0,
+            totalTime: 0,
+            elevationGain: 0,
+            avgHr: 0
+        };
 
         // DİL VERİTABANI
         const translations = {
@@ -534,6 +586,14 @@
                 optRunUrban: "Run Urban",
                 uploadText: "➕ Logo Seçmek İçin Tıkla",
                 logoReady: "✅ Logo Hazır",
+                gpxText: "📂 GPX Yükle (Otomatik Doldur)",
+                gpxReady: "✅ GPX Verileri Yüklendi!",
+                graphLabel: "Grafik (GPX Gereklidir)",
+                graphPos: "Grafik Konumu",
+                graphColor: "Grafik Rengi",
+                colOrange: "🍊 Turuncu",
+                colWhite: "⚪ Beyaz",
+                colBlue: "🔵 Mavi",
                 hero: "👑 ANA GÖSTERGE",
                 sub: "👇 ALT GÖSTERGELER",
                 pos: "Pozisyon (Yükseklik Ayarı)",
@@ -557,7 +617,11 @@
                 modalTitle: "Galeriye kaydetmek için:",
                 modalAction: "👇 Görsele Basılı Tut 👇",
                 modalEnd: "ve 'Fotoğraflara Kaydet' deyin.",
-                close: "KAPAT"
+                close: "KAPAT",
+                graphNone: "🚫 Yok (None)",
+                graphHr: "❤️ Nabız (Heart Rate)",
+                graphEle: "⛰️ İrtifa (Elevation)",
+                graphPace: "⚡ Tempo (Pace/Speed)"
             },
             en: {
                 panel1: "1. Activity Data",
@@ -576,6 +640,14 @@
                 optRunUrban: "Run Urban",
                 uploadText: "➕ Click to Select Logo",
                 logoReady: "✅ Logo Ready",
+                gpxText: "📂 Upload GPX (Auto-fill)",
+                gpxReady: "✅ GPX Data Loaded!",
+                graphLabel: "Graph (Requires GPX)",
+                graphPos: "Graph Position",
+                graphColor: "Graph Color",
+                colOrange: "🍊 Orange",
+                colWhite: "⚪ White",
+                colBlue: "🔵 Blue",
                 hero: "👑 MAIN METRIC",
                 sub: "👇 SUB METRICS",
                 pos: "Position (Vertical Offset)",
@@ -599,7 +671,11 @@
                 modalTitle: "To save to Gallery:",
                 modalAction: "👇 Long Press Image 👇",
                 modalEnd: "and select 'Save to Photos'.",
-                close: "CLOSE"
+                close: "CLOSE",
+                graphNone: "🚫 None",
+                graphHr: "❤️ Heart Rate",
+                graphEle: "⛰️ Elevation",
+                graphPace: "⚡ Pace/Speed"
             }
         };
 
@@ -628,6 +704,13 @@
             requestAnimationFrame(draw);
         }
 
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
         function changeLanguage() {
             currentLang = document.getElementById('langSelect').value;
             const t = translations[currentLang];
@@ -652,6 +735,27 @@
                 document.getElementById('uploadText').innerText = t.uploadText;
             }
             
+            // GPX Text Update
+            if(gpxData.distance === 0) {
+                 document.getElementById('gpxText').innerText = t.gpxText;
+            } else {
+                 document.getElementById('gpxText').innerText = t.gpxReady;
+                 document.getElementById('gpxStatus').innerText = t.gpxReady;
+            }
+            
+            document.getElementById('t-graph').innerText = t.graphLabel;
+            document.getElementById('t-graph-pos').innerText = t.graphPos;
+            document.getElementById('t-graph-color').innerText = t.graphColor;
+
+            document.querySelector('#graphSelect option[value="none"]').innerText = t.graphNone;
+            document.querySelector('#graphSelect option[value="hr"]').innerText = t.graphHr;
+            document.querySelector('#graphSelect option[value="elevation"]').innerText = t.graphEle;
+            document.querySelector('#graphSelect option[value="pace"]').innerText = t.graphPace;
+
+            document.getElementById('opt-color-orange').innerText = t.colOrange;
+            document.getElementById('opt-color-white').innerText = t.colWhite;
+            document.getElementById('opt-color-blue').innerText = t.colBlue;
+
             document.getElementById('t-hero').innerText = t.hero;
             document.getElementById('t-sub').innerText = t.sub;
             document.getElementById('t-pos').innerText = t.pos;
@@ -685,6 +789,146 @@
             draw();
         }
 
+        // --- GPX PARSER ---
+        function handleGpxUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                parseGpx(text);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseGpx(xmlStr) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+            const trkpts = xmlDoc.querySelectorAll('trkpt');
+            
+            // Reset Data
+            gpxData = { hr: [], elevation: [], pace: [], distance: 0, totalTime: 0, elevationGain: 0, avgHr: 0 };
+            
+            let totalHr = 0;
+            let hrCount = 0;
+            let prevTime = null;
+            let prevLat = null;
+            let prevLon = null;
+            let minEle = 9999;
+
+            // Simple Haversine for distance
+            function getDist(lat1, lon1, lat2, lon2) {
+                const R = 6371e3; // metres
+                const φ1 = lat1 * Math.PI/180;
+                const φ2 = lat2 * Math.PI/180;
+                const Δφ = (lat2-lat1) * Math.PI/180;
+                const Δλ = (lon2-lon1) * Math.PI/180;
+                const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                        Math.cos(φ1) * Math.cos(φ2) *
+                        Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            for (let i = 0; i < trkpts.length; i++) {
+                const pt = trkpts[i];
+                const ele = parseFloat(pt.querySelector('ele')?.textContent || 0);
+                const timeStr = pt.querySelector('time')?.textContent;
+                const time = new Date(timeStr).getTime();
+                
+                // Extract HR (try different namespaces)
+                let hr = 0;
+                const extensions = pt.querySelector('extensions');
+                if(extensions) {
+                    // Try common HR tags
+                    const hrTag = extensions.querySelector('hr') || 
+                                  extensions.getElementsByTagNameNS('*', 'hr')[0] ||
+                                  extensions.getElementsByTagName('gpxtpx:hr')[0];
+                    if(hrTag) hr = parseInt(hrTag.textContent);
+                }
+
+                // Store Data Points
+                if (hr > 0) {
+                    gpxData.hr.push(hr);
+                    totalHr += hr;
+                    hrCount++;
+                }
+                
+                gpxData.elevation.push(ele);
+                
+                if (i > 0) {
+                    const lat = parseFloat(pt.getAttribute('lat'));
+                    const lon = parseFloat(pt.getAttribute('lon'));
+                    
+                    const dist = getDist(prevLat, prevLon, lat, lon);
+                    gpxData.distance += dist;
+                    
+                    const timeDiff = (time - prevTime) / 1000; // seconds
+                    
+                    // Calculate Speed/Pace (Smoothing will happen in draw)
+                    // Only calculate if moving
+                    if (dist > 0 && timeDiff > 0) {
+                        const speedMps = dist / timeDiff;
+                        // Pace (min/km) = (1000 / speed) / 60
+                        const paceVal = (1000 / speedMps) / 60;
+                        if(paceVal < 30) gpxData.pace.push(paceVal); // Filter out stops
+                        else gpxData.pace.push(gpxData.pace[gpxData.pace.length-1] || 0);
+                    } else {
+                         gpxData.pace.push(gpxData.pace[gpxData.pace.length-1] || 0);
+                    }
+                    
+                    if(ele > minEle + 0.5) { // Simple gain filter
+                       // gpxData.elevationGain += (ele - minEle);
+                    }
+                    minEle = ele; // Logic for gain is complex, simplifying...
+                } else {
+                    minEle = ele;
+                    gpxData.pace.push(0);
+                }
+                
+                prevLat = parseFloat(pt.getAttribute('lat'));
+                prevLon = parseFloat(pt.getAttribute('lon'));
+                prevTime = time;
+            }
+            
+            // Fill Inputs
+            const totalKm = (gpxData.distance / 1000).toFixed(2);
+            document.getElementById('distance').value = totalKm;
+            
+            // Total Time (Start to Finish)
+            const startTime = new Date(trkpts[0].querySelector('time').textContent).getTime();
+            const endTime = new Date(trkpts[trkpts.length-1].querySelector('time').textContent).getTime();
+            const diffMs = endTime - startTime;
+            const diffSec = Math.floor(diffMs / 1000);
+            const h = Math.floor(diffSec / 3600);
+            const m = Math.floor((diffSec % 3600) / 60);
+            const s = diffSec % 60;
+            const timeFmt = `${h}:${m<10?'0':''}${m}:${s<10?'0':''}${s}`;
+            document.getElementById('time').value = timeFmt;
+            
+            // Elevation Gain (Simple approximation: Max - Min or sum of climbs)
+            // For robustness, let's just grab the last ele if available or let user edit.
+            // Actually let's do a simple ascent calc
+            let ascent = 0;
+            for(let k=1; k<gpxData.elevation.length; k++) {
+                const diff = gpxData.elevation[k] - gpxData.elevation[k-1];
+                if(diff > 0.2) ascent += diff;
+            }
+            document.getElementById('elevation').value = Math.round(ascent);
+            
+            if(hrCount > 0) {
+                document.getElementById('hr').value = Math.round(totalHr / hrCount);
+            }
+            
+            calculatePace(); // Update pace field
+            
+            document.getElementById('gpxText').innerText = translations[currentLang].gpxReady;
+            document.getElementById('gpxStatus').innerText = translations[currentLang].gpxReady;
+            
+            draw();
+        }
+
         // --- LOGO & MODAL İŞLEMLERİ ---
         
         function openSaveModal() {
@@ -708,7 +952,6 @@
                 document.getElementById('uploadText').innerText = translations[currentLang].uploadText;
                 draw();
             } else {
-                // bold veya runurban
                 uploadArea.style.display = 'none';
                 if (source === 'bold') {
                     loadPresetLogo('bold.png');
@@ -775,6 +1018,99 @@
             draw();
         }
 
+        function drawGraph(graphType, cardY, w) {
+            if (graphType === 'none' || !gpxData.hr.length) return;
+
+            let dataPoints = [];
+            if(graphType === 'hr') dataPoints = gpxData.hr;
+            else if(graphType === 'elevation') dataPoints = gpxData.elevation;
+            else if(graphType === 'pace') {
+                // Smoothing Pace Data
+                const rawPace = gpxData.pace;
+                const windowSize = 20; // Average over 20 points
+                for (let i = 0; i < rawPace.length; i++) {
+                    let sum = 0;
+                    let count = 0;
+                    for (let j = Math.max(0, i - windowSize); j < Math.min(rawPace.length, i + windowSize); j++) {
+                        if(rawPace[j] > 0 && rawPace[j] < 20) { // Filter wild values
+                             sum += rawPace[j];
+                             count++;
+                        }
+                    }
+                    dataPoints.push(count > 0 ? sum / count : 0);
+                }
+            }
+
+            if(dataPoints.length < 2) return;
+            
+            // Kullanıcı ayarları
+            const graphYOffset = parseInt(document.getElementById('graphYPos').value);
+            const graphColor = document.getElementById('graphColor').value;
+
+            // Setup Graph Area
+            const graphHeight = 250;
+            const graphBottom = cardY + graphYOffset; 
+            const graphTop = graphBottom - graphHeight;
+
+            // Scale Data
+            const minVal = Math.min(...dataPoints);
+            const maxVal = Math.max(...dataPoints);
+            const range = maxVal - minVal;
+
+            ctx.beginPath();
+            const stepX = w / (dataPoints.length - 1);
+            
+            ctx.moveTo(0, graphBottom); // Start bottom left
+
+            for (let i = 0; i < dataPoints.length; i++) {
+                const val = dataPoints[i];
+                // Normalize 0 to 1
+                const norm = (val - minVal) / (range || 1); 
+                
+                const x = i * stepX;
+                // Flip Y because canvas Y grows downwards
+                // Also elevate pace graph (lower pace value is faster/higher)
+                let y;
+                if (graphType === 'pace') {
+                     y = graphTop + (norm * graphHeight); // Lower pace = Higher on graph
+                } else {
+                     y = graphBottom - (norm * graphHeight);
+                }
+                
+                ctx.lineTo(x, y);
+            }
+
+            ctx.lineTo(w, graphBottom); // End bottom right
+            ctx.closePath();
+
+            // Style
+            const grad = ctx.createLinearGradient(0, graphTop, 0, graphBottom);
+            // Use chosen color with opacity
+            grad.addColorStop(0, hexToRgba(graphColor, 0.4));
+            grad.addColorStop(1, hexToRgba(graphColor, 0.0));
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Stroke line
+            ctx.beginPath();
+             for (let i = 0; i < dataPoints.length; i++) {
+                const val = dataPoints[i];
+                const norm = (val - minVal) / (range || 1); 
+                const x = i * stepX;
+                let y;
+                if (graphType === 'pace') {
+                     y = graphTop + (norm * graphHeight);
+                } else {
+                     y = graphBottom - (norm * graphHeight);
+                }
+                if(i===0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = graphColor;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const w = canvas.width;
@@ -793,6 +1129,10 @@
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, cardY - 200, w, 1920 - (cardY - 200));
             }
+
+            // Draw Graph BEHIND text
+            const graphType = document.getElementById('graphSelect').value;
+            drawGraph(graphType, cardY, w);
 
             const data = {
                 distance: { val: document.getElementById('distance').value, unit: "km", label: t.c_distance },
@@ -822,62 +1162,57 @@
                 weightHero = "900"; 
             }
 
-            ctx.font = `${weightTitle} 50px "${selectedFont}"`;
+            // Title Font Size reduced to ~70% (50px -> 35px)
+            ctx.font = `${weightTitle} 35px "${selectedFont}"`;
             ctx.fillText(title, 60, cardY);
 
             if (userLogo) {
-                // LOGO BOYUT AYARI
                 const logoScale = parseFloat(document.getElementById('logoSize').value);
                 const baseMaxH = 120; 
                 const baseMaxW = 200;
-                
                 const logoMaxH = baseMaxH * logoScale;
                 const logoMaxW = baseMaxW * logoScale;
-
                 let lW = userLogo.width;
                 let lH = userLogo.height;
                 const ratio = lW / lH;
-
                 if (lH > logoMaxH) { lH = logoMaxH; lW = lH * ratio; }
                 if (lW > logoMaxW) { lW = logoMaxW; lH = lW / ratio; }
-
                 const logoX = w - 60 - lW;
-                // LOGO HİZALAMA: Biraz aşağı alındı
                 const logoY = cardY - 35; 
                 ctx.drawImage(userLogo, logoX, logoY, lW, lH);
             }
 
             const heroData = data[heroKey];
             
-            // Otomatik Boyutlandırma (Hero Metni İçin)
-            let heroFontSize = 200;
-            // Süre (Time) seçiliyse varsayılan olarak biraz küçült
-            if (heroKey === 'time') heroFontSize = 150;
+            // Otomatik Boyutlandırma (Hero) - Reduced to ~70%
+            let heroFontSize = 140; // Was 200
+            if (heroKey === 'time') heroFontSize = 105; // Was 150
             
-            // Metin genişliğini hesapla ve sığdır
             ctx.font = `${weightHero} ${heroFontSize}px "${selectedFont}"`; 
             let textMetrics = ctx.measureText(heroData.val);
             let textWidth = textMetrics.width;
-            const maxHeroWidth = w - 100; // Kenarlardan biraz boşluk bırak (100px padding)
+            const maxHeroWidth = w - 100; 
 
             if (textWidth > maxHeroWidth) {
                 heroFontSize = heroFontSize * (maxHeroWidth / textWidth);
             }
 
-            // Son font ayarı
             ctx.font = `${weightHero} ${heroFontSize}px "${selectedFont}"`; 
             ctx.fillStyle = "white";
-            ctx.fillText(heroData.val, 50, cardY + 180);
+            // Adjusted Y position for smaller font
+            ctx.fillText(heroData.val, 50, cardY + 130); // Was 180
 
             const heroWidth = ctx.measureText(heroData.val).width;
             
-            ctx.font = `bold 50px "${selectedFont}"`;
+            // Hero Unit reduced (~70%)
+            ctx.font = `bold 35px "${selectedFont}"`; // Was 50
             ctx.fillStyle = "#fc4c02";
-            ctx.fillText(heroData.unit, 50 + heroWidth + 15, cardY + 180);
+            ctx.fillText(heroData.unit, 50 + heroWidth + 15, cardY + 130);
 
-            ctx.font = `bold 30px "${selectedFont}"`;
+            // Hero Label reduced (~70%)
+            ctx.font = `bold 22px "${selectedFont}"`; // Was 30
             ctx.fillStyle = "#aaa";
-            ctx.fillText(heroData.label.toUpperCase(), 60, cardY + 225);
+            ctx.fillText(heroData.label.toUpperCase(), 60, cardY + 165); // Adjusted Y
 
             const checkedBoxes = document.querySelectorAll('.stat-check:checked');
             let activeStats = Array.from(checkedBoxes)
